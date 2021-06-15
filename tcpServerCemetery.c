@@ -125,7 +125,7 @@ void getInfoByName(int newSocket, char buffer[1024]) {
 	char column[4] = {'\0'};
 	char returnMessage[1024] = {'\0'};
 	char currentMessage[128] = {'\0'};
-	fd = open ("testCemetery.txt", O_RDONLY);
+	fd = open ("cemeteryNames.txt", O_RDONLY);
 	if(fd != -1) {
 		while(read(fd, currBuffer, 70) == 70) {
 			strncpy(name, currBuffer, 38);
@@ -138,7 +138,16 @@ void getInfoByName(int newSocket, char buffer[1024]) {
 				strncpy(dateTillReserved, currBuffer+50, 10);
 				strncpy(row, currBuffer+61, 3);
 				strncpy(column, currBuffer+65, 3);
-				strcpy(returnMessage, ("Name: %s, Date of funeral: %s, Reserved until: %s, Row: %s, Column: %s", 						name,dateOfFuneral, dateTillReserved, row, column));// right info but doesnt save right in variable
+				strncpy(currentMessage, ("Name: %s, Date of funeral: %s, Reserved until: %s, Row: %s, Column: %s", 						name,dateOfFuneral, dateTillReserved, row, column),71);
+				strcat(returnMessage, "Name:");
+				strcat(returnMessage, name);
+				strcat(returnMessage, "Date of Funeral:");
+				strcat(returnMessage, dateOfFuneral);
+				strcat(returnMessage, "Row:");
+				strcat(returnMessage, row);
+				strcat(returnMessage, "Column:");
+				strcat(returnMessage, column);
+				
 				//strcat(returnMessage, currentMessage); //("Name: %s, Date of funeral: %s, Reserved until: %s, Row: %s, Column: %s", NEEDS FIXING TODO
 				//name,dateOfFuneral, dateTillReserved, row, column));
 				printf("%s-%s-%s-%s-%s\n",name,dateOfFuneral, dateTillReserved, row, column);
@@ -148,10 +157,13 @@ void getInfoByName(int newSocket, char buffer[1024]) {
 		}
 		close(fd);
 	}
-	//check if variable is empty there is noone with that name TODO
-	
-	
-	send(newSocket, returnMessage, strlen(returnMessage), 0);
+	//check if variable is empty there is noone with that name
+	if(strlen(returnMessage) == 0) {
+		send(newSocket, "There is no such name in the list of burried people!", 
+		strlen("There is no such name in the list of burried people!"), 0);
+	} else {
+		send(newSocket, returnMessage, strlen(returnMessage), 0);
+	}
 	
 	
 }
@@ -185,7 +197,7 @@ void reserveByRowAndColumn(int newSocket) {
 	char latestDate[11] = {"01/01/1900"};
 	char currLine[70] = {'\0'};
 	bool isFree = true;
-	fd = open ("testCemetery.txt", O_RDWR);
+	fd = open ("cemeteryNames.txt", O_RDWR);
 	if(fd != -1) {
 		while(read(fd, currBuffer, 70) == 70) {
 			strncpy(row, currBuffer+61, 3);
@@ -217,7 +229,6 @@ void reserveByRowAndColumn(int newSocket) {
 			char month[3] = {'\0'};
 			char year[3] = {'\0'};
 				if(strcmp(trim(currLength), "1") == 0) {
-					//bzero(currLine, sizeof(currLine));
 					sprintf(day, "%d", tm.tm_mday);
 					sprintf(month, "%d", tm.tm_mon);
 					sprintf(year, "%d", tm.tm_year);
@@ -237,7 +248,6 @@ void reserveByRowAndColumn(int newSocket) {
 					strncat(currLine, "|", 2);
 					write(fd, currLine, sizeof(currLine));	
 				} else if(strcmp(trim(currLength), "2") == 0){
-					//bzero(currLine, sizeof(currLine));
 					strncat(currLine, currName, strlen(currName) + 1);
 					strncat(currLine, "|", 2);
 					strncat(currLine, currentDate, strlen(currentDate) + 1);
@@ -255,8 +265,7 @@ void reserveByRowAndColumn(int newSocket) {
 				send(newSocket, "It is already reserved.", strlen("It is already reserved."), 0);
 			}
 		} else { 
-			// VQRNI DANNI NO PROBLEM S DATITE
-			//svoboden e groba
+			//svoboden grob
 			//write to file
 			//if 1 currentDate + 15; if 2 - forever
 			if(strcmp(trim(currLength), "1") == 0) {
@@ -357,5 +366,3 @@ char *trim(char *s)
 {     
     return rtrim(ltrim(s));  
 } 
-
-
